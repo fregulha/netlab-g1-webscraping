@@ -1,0 +1,16 @@
+{
+  "observacao": "2026-09-17",
+  "metodo": "HTTP GET; HTML inicial e JS público referenciado; navegador bloqueado pela política da sessão",
+  "arquivos": [
+    {
+      "arquivo": "initial.html",
+      "url": "https://g1.globo.com/busca/?q=lgpd",
+      "sha256_bytes": "d329b4e8f9e420925988007a9ea489eea78b745232b1728aa2e6eb59c919ed9a"
+    },
+    {
+      "arquivo": "component.js",
+      "url": "https://s.glbimg.com/bs/delivery/delivery-components/backstage-cms-all-search-results/0.2.9/src_component_tsx-webpack_sharing_consume_default_react_react-webpack_sharing_consume_default-bbb632.js",
+      "sha256_bytes": "e56311e2e1f108ffc235ecb29dcda3df106aa06fa631c54decf1ea05dceffc95"
+    }
+  ]
+}
