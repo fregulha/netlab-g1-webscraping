@@ -1,0 +1,85 @@
+{
+  "verificado_em": "2026-09-17T18:25:38.664840+00:00",
+  "arquivos": [
+    {
+      "arquivo": "Busca.html",
+      "titulo_html": "Busca",
+      "sha256_bytes": "852efdc38000c52573042554f43e49de9a84d1097a50e0822fbbffb599dff589",
+      "captura_em": null,
+      "origem": "arquivo fornecido pela usuária",
+      "cards": 10,
+      "videos": 1,
+      "noticias": 9,
+      "veja_mais": true
+    },
+    {
+      "arquivo": "lote_02.html",
+      "titulo_html": "Resultado da busca por lgpd | Página 2",
+      "sha256_bytes": "d92d80a6cb59ed3045387c187d2a1e6333a25141f121c5389f4cf1703b50cb3b",
+      "captura_em": null,
+      "origem": "arquivo fornecido pela usuária",
+      "cards": 20,
+      "videos": 4,
+      "noticias": 16,
+      "veja_mais": true
+    },
+    {
+      "arquivo": "lote_03.html",
+      "titulo_html": "Resultado da busca por lgpd | Página 3",
+      "sha256_bytes": "911c524934852927cc1bc63f193802118ae64ff528afc8ccdf95b9d6d2728d66",
+      "captura_em": null,
+      "origem": "arquivo fornecido pela usuária",
+      "cards": 30,
+      "videos": 4,
+      "noticias": 26,
+      "veja_mais": true
+    }
+  ],
+  "cards_por_snapshot": [
+    10,
+    20,
+    30
+  ],
+  "prefixo_1_preservado_em_2": true,
+  "prefixo_2_preservado_em_3": true,
+  "ocorrencias_brutas": 60,
+  "registros_unicos": 30,
+  "duplicados_removidos": 30,
+  "unicidade_antes": 0.5,
+  "unicidade_depois": 1.0,
+  "primeiro_lote_observado": {
+    "1": 10,
+    "2": 10,
+    "3": 10
+  },
+  "completude": {
+    "titulo": {
+      "presentes": 30,
+      "total": 30
+    },
+    "url": {
+      "presentes": 30,
+      "total": 30
+    },
+    "resumo": {
+      "presentes": 30,
+      "total": 30
+    },
+    "data_publicacao": {
+      "presentes": 0,
+      "total": 30
+    },
+    "data_exibida": {
+      "presentes": 30,
+      "total": 30
+    }
+  },
+  "integridade_snapshot": {
+    "verificados": 30,
+    "validos": 30,
+    "taxa": 1.0
+  },
+  "referencia_independente": "Somente 10 cards do lote 1, ainda sem revisão humana.",
+  "atualidade": null,
+  "paginacao_ao_vivo_validada": false
+}

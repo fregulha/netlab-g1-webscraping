@@ -1,0 +1,37 @@
+{
+  "eventos": [
+    {
+      "pagina": 1,
+      "aquisicao": "arquivo_fornecido; horario_original_de_captura_desconhecido",
+      "coletado_em": "2026-09-17T18:24:35.393060+00:00",
+      "fonte_url": "https://g1.globo.com/busca/?q=lgpd",
+      "cards": 10,
+      "outros_cards": 0,
+      "container_vazio": false,
+      "veja_mais": true
+    },
+    {
+      "pagina": 2,
+      "aquisicao": "arquivo_fornecido; horario_original_de_captura_desconhecido",
+      "coletado_em": "2026-09-17T18:24:35.484162+00:00",
+      "fonte_url": "https://g1.globo.com/busca/?q=lgpd",
+      "cards": 20,
+      "outros_cards": 0,
+      "container_vazio": false,
+      "veja_mais": true
+    },
+    {
+      "pagina": 3,
+      "aquisicao": "arquivo_fornecido; horario_original_de_captura_desconhecido",
+      "coletado_em": "2026-09-17T18:24:35.585496+00:00",
+      "fonte_url": "https://g1.globo.com/busca/?q=lgpd",
+      "cards": 30,
+      "outros_cards": 0,
+      "container_vazio": false,
+      "veja_mais": true
+    }
+  ],
+  "duplicados": 30,
+  "registros": 30,
+  "quarentena": 0
+}

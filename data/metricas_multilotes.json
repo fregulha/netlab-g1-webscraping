@@ -1,0 +1,49 @@
+{
+  "referencia_n": 10,
+  "escopo_paginas": [
+    1
+  ],
+  "coletados_escopo": 10,
+  "cobertura": 1.0,
+  "precisao_pertencimento": 1.0,
+  "unicidade": 1.0,
+  "completude": {
+    "titulo": 1.0,
+    "url": 1.0,
+    "resumo": 1.0,
+    "data_publicacao": 0.0,
+    "data_exibida": 1.0
+  },
+  "acuracia_campos": {
+    "titulo": {
+      "iguais": 10,
+      "comparaveis": 10,
+      "taxa": 1.0
+    },
+    "resumo": {
+      "iguais": 10,
+      "comparaveis": 10,
+      "taxa": 1.0
+    },
+    "data_publicacao": {
+      "iguais": 0,
+      "comparaveis": 0,
+      "taxa": null
+    },
+    "data_exibida": {
+      "iguais": 10,
+      "comparaveis": 10,
+      "taxa": 1.0
+    }
+  },
+  "consistencia": 1.0,
+  "rastreabilidade_declarada": 1.0,
+  "atualidade": null,
+  "nota_atualidade": "Requer comparação temporal com captura contemporânea; não inferir de notícias antigas.",
+  "integridade_snapshot": {
+    "verificados": 30,
+    "validos": 30,
+    "taxa": 1.0
+  },
+  "referencia_metodo": "Referência local revisada pelo assistente; revisão humana independente pendente."
+}

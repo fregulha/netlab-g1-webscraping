@@ -1,6 +1,39 @@
 # Busca G1 / LGPD — diagnóstico e extração auditável
 
-**STATUS: validação do snapshot concluída; coleta online e paginação pendentes.**
+**STATUS: extração de três snapshots cumulativos validada; aquisição online automática pendente.**
+
+## Atualização: três snapshots fornecidos
+
+A base atual está em `data/coleta_multilotes/resultados.json` e `.csv`: **30 URLs
+únicas**, de 26 notícias e 4 vídeos. Os arquivos contêm 10, 20 e 30 cards, com
+prefixos de URLs idênticos. Das 60 ocorrências, 30 repetições foram removidas.
+Cada registro preserva seu primeiro lote observado (10 registros por lote).
+Título, URL, resumo e data exibida estão presentes em 30/30; publicação, em 0/30.
+Os 30 hashes foram conferidos. Atualidade segue não mensurada.
+
+**24 testes aprovados**, incluindo a regressão dos três HTMLs reais, conforme
+`evidence/tests_multilotes.txt`. `pytest.ini` restringe descoberta à pasta `tests`
+para não interpretar arquivos de log como testes. Os logs novos usam UTF-8.
+
+A comparação de acurácia continua restrita à referência provisória de 10 cards
+do primeiro lote, com revisão humana pendente. Não extrapolar para os outros 20.
+Ver `data/metricas_multilotes.json` e `data/auditoria_multilotes.json`.
+
+Comandos (uma linha por comando, dentro da pasta do projeto):
+
+```bash
+python scraper.py --html evidence/Busca.html evidence/lote_02.html evidence/lote_03.html --out data/coleta_multilotes
+python evaluate.py --data data/coleta_multilotes/resultados.json --reference data/referencia_revisada.json --out data/metricas_multilotes.json
+python docs/avaliar_multilotes.py
+python -m pytest -q
+```
+
+Os arquivos com títulos “Página 2” e “Página 3” demonstram conteúdo cumulativo,
+mas não validam a requisição de paginação. Todos ainda contêm “Veja mais”.
+Não há horário independente de captura. A base anterior de um lote é preservada
+abaixo e em `data/coleta/` como histórico, não como base atual da entrega.
+
+## Histórico: validação original de um lote
 
 23 testes aprovados. O HTML renderizado enviado pela candidata contém 10 resultados
 (9 notícias e 1 vídeo). A base real extraída está em `data/coleta/resultados.json`

@@ -120,3 +120,17 @@ def test_orchestrator_preserves_success_after_failure(tmp_path, monkeypatch):
     assert main() == 3
     rows = json.loads((out / 'resultados.json').read_text(encoding='utf-8'))
     assert len(rows) == 1 and rows[0]['pagina'] == 2
+
+
+def test_real_cumulative_snapshots():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1] / 'evidence'
+    batches = [parse((root / name).read_text(encoding='utf-8'), page)
+               for page, name in enumerate(['Busca.html', 'lote_02.html', 'lote_03.html'], 1)]
+    assert [len(batch) for batch in batches] == [10, 20, 30]
+    urls = [[row['url'] for row in batch] for batch in batches]
+    assert urls[0] == urls[1][:10] == urls[2][:10]
+    assert urls[1] == urls[2][:20]
+    good, quarantine, duplicates = deduplicate(sum(batches, []))
+    assert len(good) == 30 and duplicates == 30 and not quarantine
+    assert [sum(row['pagina'] == p for row in good) for p in [1, 2, 3]] == [10, 10, 10]
