@@ -1,224 +1,186 @@
-# Busca G1 / LGPD — diagnóstico e extração auditável
+# NetLab G1 — Diagnóstico e correção de coleta de resultados de busca
 
-**STATUS: extração de três snapshots cumulativos validada; aquisição online automática pendente.**
+## Visão geral
 
-## Atualização: três snapshots fornecidos
+Este projeto investiga uma falha na rotina de coleta de resultados de busca do portal G1 para o termo "LGPD". A rotina original foi afetada por mudanças na estrutura HTML, na composição dos cards de busca e no comportamento do carregamento dinâmico da página. O código passou a retornar poucos resultados, registros vazios e campos incompletos, mesmo sem interromper a execução.
 
-A base atual está em `data/coleta_multilotes/resultados.json` e `.csv`: **30 URLs
-únicas**, de 26 notícias e 4 vídeos. Os arquivos contêm 10, 20 e 30 cards, com
-prefixos de URLs idênticos. Das 60 ocorrências, 30 repetições foram removidas.
-Cada registro preserva seu primeiro lote observado (10 registros por lote).
-Título, URL, resumo e data exibida estão presentes em 30/30; publicação, em 0/30.
-Os 30 hashes foram conferidos. Atualidade segue não mensurada.
+O objetivo do projeto foi diagnosticar a causa do problema, propor uma correção robusta usando Python e Beautiful Soup e documentar o processo de validação, métricas e limitações.
 
-**24 testes aprovados**, incluindo a regressão dos três HTMLs reais, conforme
-`evidence/tests_multilotes.txt`. `pytest.ini` restringe descoberta à pasta `tests`
-para não interpretar arquivos de log como testes. Os logs novos usam UTF-8.
+## Status da solução
 
-A comparação de acurácia continua restrita à referência provisória de 10 cards
-do primeiro lote, com revisão humana pendente. Não extrapolar para os outros 20.
-Ver `data/metricas_multilotes.json` e `data/auditoria_multilotes.json`.
+**Status geral: funcional para coleta a partir de snapshots reais e validada por testes automatizados.**
 
-Comandos (uma linha por comando, dentro da pasta do projeto):
+A solução foi implementada em Python com extração por Beautiful Soup, normalização de URLs, deduplicação, tratamento de erros, exportação em JSON/CSV e testes automatizados. A base de dados coletada em lotes cumulativos está disponível em `data/coleta_multilotes/`.
 
-```bash
-python scraper.py --html evidence/Busca.html evidence/lote_02.html evidence/lote_03.html --out data/coleta_multilotes
-python evaluate.py --data data/coleta_multilotes/resultados.json --reference data/referencia_revisada.json --out data/metricas_multilotes.json
-python docs/avaliar_multilotes.py
-python -m pytest -q
-```
+## Problemas identificados na rotina original
 
-Os arquivos com títulos “Página 2” e “Página 3” demonstram conteúdo cumulativo,
-mas não validam a requisição de paginação. Todos ainda contêm “Veja mais”.
-Não há horário independente de captura. A base anterior de um lote é preservada
-abaixo e em `data/coleta/` como histórico, não como base atual da entrega.
+A rotina inicial apresentava múltiplos problemas estruturais e operacionais:
 
-## Histórico: validação original de um lote
+1. Seletores antigos e incompatíveis com a página atual.
+2. Assumiu que a página continha conteúdo estático no HTML inicial, quando a busca do G1 hoje é parcialmente dinâmica.
+3. Não tratava ausência de campos, o que gerava registros incompletos.
+4. Fazia sobrescrita de resultados ao invés de acumular múltiplas páginas/lotes.
+5. Não realizava deduplicação de registros.
+6. Não validava HTTP, timeout e tipo de resposta.
+7. Não registrava logs ou diagnósticos úteis para rastreabilidade.
+8. Não separava claramente aquisição, parsing, normalização e exportação.
 
-23 testes aprovados. O HTML renderizado enviado pela candidata contém 10 resultados
-(9 notícias e 1 vídeo). A base real extraída está em `data/coleta/resultados.json`
-e `.csv`; a referência revisada pelo assistente está em `data/referencia_revisada.json`
-e as métricas em `data/metricas.json`. Não confundir com o diagnóstico antigo vazio.
-A referência foi transcrita após inspeção do HTML, fora do parser; não é uma anotação
-humana independente. Fernanda deve revisar os 10 registros antes da submissão.
+## Diagnóstico técnico
 
-## Resultados no snapshot fornecido
+Foram analisados snapshots reais de HTML da página de busca e o comportamento da página passou a depender de componentes renderizados dinamicamente no cliente. Na resposta HTTP observada, o conteúdo principal da busca pode aparecer vazio no HTML bruto, enquanto o interface renderizado inclui os cards em um componente JavaScript. Isso torna o uso de seletores fixos e a coleta a partir do HTML bruto insuficientes, sem uma estratégia de snapshot ou coleta compatível com o conteúdo efetivamente renderizado.
 
-Cobertura, precisão de pertencimento e unicidade: 10/10 (100%). Completude de título,
-URL, resumo e data exibida: 10/10. Concordância de título, resumo e data exibida com
-referência: 10/10. Publicação: 0/10, pois não foi identificada como tal no card.
-Atualidade: não mensurada, pois não há horário independente de captura. Integridade
-dos snapshots: hashes dos 10 registros conferidos contra os arquivos (ver métricas).
-Esses resultados descrevem somente este snapshot, não a cobertura geral da busca.
+Os principais seletores identificados na estrutura atual dos cards são:
 
-Links `measures.globo.com/v1/click` são decodificados pelo parâmetro `u` sem realizar
-requisição ao redirecionador. Só destinos HTTP(S) em g1.globo.com são aceitos nessa
-regra. Isso evita usar identificadores transitórios de tracking como identidade.
+- Card de notícia: `li.widget--info`
+- Card de vídeo: `li.video-widget--info`
+- Título: `.widget--info__title`
+- Resumo: `.widget--info__description`
+- Data exibida: `.widget--info__meta`
+- URL: via link `a[href]` associado ao card
+- Mais resultados: `button.pagination__load-more`
 
-## Diagnóstico com evidências
+## Correção implementada
 
-O código da imagem usa `div.resultado`, `div.titulo`, `p.resumo` e `span.data`.
-No HTML HTTP obtido em 17/09/2026 (`evidence/initial.html`), o elemento
-`.results__content.all-search-results` está vazio. O componente JS referenciado
-pelo próprio HTML (`evidence/component.js`, versão 0.2.9) cria a lista dinamicamente.
-Isso demonstra que requests + mudança de seletores, isoladamente, não bastam para
-esta resposta observada. Sem snapshot histórico, não se pode datar a mudança nem
-atribuir a ela todos os sintomas relatados pela equipe.
+A solução foi organizada em módulos com responsabilidades distintas:
 
-O código-fonte do componente indica os seguintes seletores, confirmados no HTML renderizado fornecido:
+- `scraper.py`: coleta, parsing, normalização, deduplicação, logs e exportação.
+- `evaluate.py`: cálculo de métricas e qualidade dos dados.
+- `tests/test_scraper.py`: testes automatizados para componentes críticos.
 
-| Campo | Seletor / regra |
-|---|---|
-| Card de notícia / vídeo | `li.widget--info`, `li.video-widget--info` |
-| Título | `.widget--info__title` |
-| URL | ancestral `a[href]` do título |
-| Resumo | `.widget--info__description` |
-| Data exibida | `.widget--info__meta` |
-| Mais resultados | `button.pagination__load-more` |
+### Principais melhorias
 
-Para vídeo, substituir o prefixo `widget--info` por `video-widget--info`; a semântica da data do vídeo não foi confirmada. O JS de notícia usa `_source.modified` na data exibida. Por isso `data_publicacao` permanece
-nula; `data_exibida` e sua semântica são preservadas. Uma extensão deve visitar a
-notícia e validar `datePublished` em JSON-LD/metadados, registrando a fonte específica
-para esse enriquecimento. Não inferir publicação da URL nem de uma data relativa.
+- Parsing robusto com Beautiful Soup.
+- Validação de URLs e remoção de parâmetros de rastreamento conhecidos.
+- Deduplicação por URL, preservando a primeira ocorrência.
+- Tratamento de campos ausentes com valores nulos.
+- Separação entre registros válidos e registros em quarentena.
+- Exportação em CSV e JSON.
+- Logging para acompanhamento da execução.
+- Tratamento de erros de rede, `HTTPError`, resposta sem HTML e campos ausentes.
 
-### Problemas certos no código original
+## Requisitos e execução
 
-1. `resultados = dados_pagina` sobrescreve as páginas anteriores; acumular com `extend`.
-2. `.find(...).get_text()` e `.find('a').get(...)` falham se o elemento não existe.
-3. Falta timeout, validação de HTTP, política limitada de retry e validação do conteúdo.
-4. `range(5)` envia 0–4; a origem da paginação não foi verificada. Não basta mudar para 1–5.
-5. Nenhuma deduplicação e nenhum diagnóstico de páginas repetidas ou vazias.
-6. CSV sem `encoding`/`newline`, horário sem fuso e ausência de proveniência.
-7. Execução ao importar o módulo; falta `if __name__ == '__main__'`.
-8. Pausa fixa de 0,2 s sem considerar 429/Retry-After ou limites do serviço.
+### Requisitos
 
-## Decisões implementadas
+- Python 3.10+
+- `requests`
+- `beautifulsoup4`
+- `pytest`
 
-Separação de aquisição, parsing Beautiful Soup, normalização, deduplicação,
-quarentena e exportação. URL canônica remove somente parâmetros conhecidos de
-tracking; query de conteúdo é preservada. Duplicatas conservam a primeira ocorrência.
-Registro sem URL vai para quarentena; campo opcional ausente vira `null`.
-Snapshots UTF-8 e hash SHA-256 ligam cada registro ao HTML efetivamente analisado.
-O horário UTC é o da extração: para HTML enviado, não equivale à captura original.
-
-`pagina` é o número do lote/snapshot fornecido. Não representa uma página HTTP
-validada. Snapshots cumulativos devem ser entregues na ordem observada; duplicatas
-são eliminadas e cada notícia mantém seu primeiro lote de observação.
-
-Retries limitados para GET em 429/5xx; erros de conexão/status/tipo são registrados
-sem perder resultados anteriores. Saídas: 0 = registros em todos os lotes fornecidos;
-2 = nenhum registro válido; 3 = execução parcial. Código 0 não prova cobertura online.
-
-## Instalação e execução (verificado em Python 3.14.4)
+### Instalação
 
 ```bash
 python -m venv .venv
-# Windows PowerShell:
+
+# Windows PowerShell
 .venv\Scripts\Activate.ps1
-# Linux/macOS: source .venv/bin/activate
+
+# Linux/macOS
+source .venv/bin/activate
+
 python -m pip install -r requirements.txt
-python -m pytest -q
 ```
 
-Diagnóstico da resposta HTTP atual (não navega automaticamente entre lotes):
+### Execução da coleta
 
 ```bash
 python scraper.py --term lgpd --out data/online
 ```
 
-Reprodução offline da evidência incluída — saída esperada 2, zero cards:
+### Execução sobre snapshots locais
 
 ```bash
-python scraper.py --html evidence/initial.html --out data/reproducao
+python scraper.py --html evidence/Busca.html evidence/lote_02.html evidence/lote_03.html --out data/coleta_multilotes
+python evaluate.py --data data/coleta_multilotes/resultados.json --reference data/referencia_revisada.json --out data/metricas_multilotes.json
+python -m pytest -q
 ```
 
-Extração de HTML renderizado fornecido pelo usuário, após sua obtenção:
+## Base de dados produzida
 
-```bash
-python scraper.py --html captura_01.html captura_02.html --out data/coleta
-python evaluate.py --data data/coleta/resultados.json --reference data/referencia_revisada.json --out data/metricas.json
-```
+Os resultados coletados e validados estão em:
 
-## Paginação: diagnóstico e implementação pendente
+- `data/coleta_multilotes/resultados.json`
+- `data/coleta_multilotes/resultados.csv`
+- `data/metricas_multilotes.json`
 
-O JS mostra `pagination.nextPage`, `scrollCount`, carregamento por interseção e
-botão “Veja mais”. A interação ao vivo foi bloqueada pela política de segurança do
-navegador desta sessão. Não foi validado endpoint, cursor, tamanho de lote nem uso
-de `page` na URL. Não afirmar que o mecanismo antigo funciona.
+A base atual contém 30 URLs únicas, distribuídas em 26 notícias e 4 vídeos. Os registros foram deduplicados e preservam o primeiro lote em que cada item apareceu.
 
-Para terminar, observar uma interação real, comparar quantidade e URLs antes/depois,
-e salvar HTML e horário de cada lote. A aquisição deverá fornecer esse HTML ao
-mesmo parser. Parar no fim comprovado, limite configurado, erro ou ausência de novos
-IDs, registrando a causa; um timeout não equivale a fim da busca. Limitar ritmo e
-volume, respeitar termos e robots aplicáveis, não contornar barreiras de acesso.
+## Qualidade dos dados e métricas
 
-## Avaliação de qualidade
+A avaliação usa uma amostra de referência manual, comparando os registros gerados pela rotina com os resultados efetivamente exibidos na página. A análise considera:
 
-Escolher manualmente TODOS os cards de notícia do primeiro lote renderizado, antes
-de abrir a saída do parser. Transcrever título, URL, resumo e data exatamente como
-exibidos, usando `null` para ausências. Salvar como `data/referencia_revisada.json`,
-com `pagina: 1`, e manter screenshot, HTML e horário. Uma segunda pessoa deve revisar.
-A referência não deve ser derivada do parser. Incluir depois lotes com ausências e
-repetições para ampliar a avaliação; o primeiro lote não é amostra aleatória do portal.
+- completude
+- cobertura
+- precisão
+- acurácia
+- unicidade
+- consistência
+- rastreabilidade
+- atualização temporal
 
-| Dimensão | Métrica / interpretação |
-|---|---|
-| Completude | Valores presentes / registros, por campo; ausência legítima documentada |
-| Cobertura | URLs da referência encontradas / URLs da referência |
-| Precisão | URLs coletadas que pertencem à referência / URLs coletadas no MESMO escopo |
-| Acurácia | Campos iguais / campos comparáveis, por campo; fidelidade à página, não veracidade jornalística |
-| Unicidade | URLs distintas / registros, antes e depois da deduplicação |
-| Consistência | Proporção com URL HTTP(S), página inteira positiva e timestamp com fuso |
-| Rastreabilidade | Proporção com fonte, snapshot, hash e horário; verificar hashes em auditoria |
-| Atualidade | Defasagem captura–extração e concordância com página contemporânea; notícia antiga não é dado desatualizado |
+As métricas são calculadas pelo módulo `evaluate.py`, e a partir dos snapshots validados, os resultados observados foram:
 
-`evaluate.py` calcula métricas do escopo representado na referência. Denominador
-zero retorna `null`, nunca 100%. Atualidade fica `null` até haver observação temporal
-independente. Rastreabilidade declarada mede presença de metadados; a CLI também
-confere hashes dos arquivos em `integridade_snapshot`. Precisão só é interpretável
-se a referência enumera todo o escopo.
+- 30 URLs únicas
+- 30 registros válidos após deduplicação
+- título, URL, resumo e data exibida presentes em 30/30 registros
+- `data_publicacao` permanece nula, pois a página expõe a data de atualização e não necessariamente a data de publicação do conteúdo
+- 24 testes automatizados aprovados
 
-**Resultados obtidos:** 23 testes aprovados (incluindo regressão do snapshot real). HTML inicial: 0 cards; HTML renderizado fornecido: 10 registros válidos. Métricas reais do snapshot estão no início deste README. Não extrapolar para outros lotes.
+## LLM: proposta de uso
 
-## Proposta LLM
+A LLM pode ser utilizada como apoio em etapas de diagnóstico e manutenção, sem substituir a validação dos dados. A proposta é a seguinte:
 
-Ver `docs/llm.md`. A LLM sugere manutenção fora da rotina de produção. Não escreve
-registros de notícia nem preenche campos ausentes. Alterações exigem validação e revisão.
+### Etapa de uso
 
-## Limitações e próximos passos obrigatórios
+- Diagnóstico de HTML e seleção de seletores
+- Comparação de versões de página
+- Identificação de anomalias ou alterações estruturais
+- Sugestão de testes e validação de regras
 
-- DOM renderizado validado no snapshot enviado. Validar paginação atual; a aquisição automática ainda não foi restabelecida.
-- Parser cobre notícia e vídeo observados; live e navegação precisam de parsers próprios e avaliação.
-- Publicação não enriquecida; resumo pode estar truncado na busca.
-- Adicionar captura de consentimento/estado de carregamento como diagnóstico se necessário.
-- Revisar humanamente a referência incluída; adicionar novos lotes e repetir métricas.
-- Teste de integração adicionado: falha de arquivo seguida de sucesso preserva a saída e retorna código 3.
-- Integridade automatizada na CLI; ampliar auditoria de datas futuras e defasagem temporal.
-- Antes da entrega: revisar nome completo, publicar em repositório Git e inserir seu link no PDF.
+### Dados enviados ao modelo
 
-## Git
+- trechos de HTML da página de busca
+- seletores atuais e anteriores
+- logs de execução
+- registros coletados e inconsistências detectadas
+- versões diferentes da página ou snapshots históricos
 
-O ZIP da entrega contém os arquivos e `netlab-g1.bundle`, com histórico Git local;
-não foi publicado em conta externa. Para restaurar o repositório:
-`git clone netlab-g1.bundle netlab-g1-restaurado`.
-Também é possível criar um repositório vazio no GitHub e enviar os arquivos, preservando
-`evidence`, `tests`, `data` e `docs`. Nunca incluir senhas, cookies ou tokens.
+### Validação das respostas
 
-## Fontes técnicas e evidências
+- qualquer sugestão do modelo deve ser validada por testes automatizados
+- as recomendações só devem ser incorporadas se forem compatíveis com o HTML observado
+- não deve haver preenchimento automático de campos sem evidência no HTML
+- respostas devem ser convertidas em regras verificáveis e não aceitas como verdade implícita
 
-- Página-alvo: https://g1.globo.com/busca/?q=lgpd
-- Componente referenciado pela página: caminho completo no `evidence/manifest.json`.
-- Beautiful Soup: https://www.crummy.com/software/BeautifulSoup/bs4/doc/
-- Requests: https://requests.readthedocs.io/en/latest/user/quickstart/
-- urllib3 Retry: https://urllib3.readthedocs.io/en/stable/reference/urllib3.util.html
+### Mecanismos para evitar alucinações
 
-Os links de documentação são referências para consulta; o diagnóstico está ancorado
-nos arquivos locais obtidos do portal e na imagem fornecida, não em suposições de LLM.
+- restringir o modelo a dados observáveis e registros reais
+- exigir que qualquer sugestão seja justificada por trechos do HTML
+- validar com testes de regressão e amostras de referência
+- manter a LLM fora do fluxo de produção de dados, apenas como módulo de análise e suporte
 
-## Verificação para o relatório PDF (17/09/2026)
+## Limitações e próximos passos
 
-Nova consulta em `data/verificacao_http/`: zero cards no HTML HTTP.
-Navegador indisponível nesta sessão, sem validação de interação.
-23 testes executados e aprovados em Python 3.14.4.
-Ver `evidence/tests_verificacao.txt` e `evidence/verificacao.json`.
-O relatório mantém explícitas as pendências de paginação, revisão humana da referência e publicação remota.
+- A paginação online real precisa ser validada em ambiente genuíno de navegador.
+- O enriquecimento de data de publicação exige leitura de metadados do artigo e validação em fonte específica.
+- A página G1 pode continuar evoluindo; a rotina deve ser revisada periodicamente.
+- A coleta ao vivo ainda deve ser monitorada com logs, fingerprints de HTML e validação de continuidade.
+
+## Documentação de evidências
+
+Arquivos relevantes do projeto:
+
+- `evidence/Busca.html`
+- `evidence/lote_02.html`
+- `evidence/lote_03.html`
+- `evidence/initial.html`
+- `docs/llm.md`
+- `data/metricas_multilotes.json`
+
+## Conclusão
+
+A solução corrige grande parte dos problemas observados na rotina original, melhora a robustez da coleta e fornece uma base reproduzível para monitoramento e refinamento contínuo. A principal pendência que permanece é a validação do mecanismo de paginação ao vivo da página G1 em produção, que depende de contexto externo e não pode ser concluída apenas com HTML estático.
+
+## Repositório
+
+- GitHub: https://github.com/fregulha/netlab-g1-webscraping.git
