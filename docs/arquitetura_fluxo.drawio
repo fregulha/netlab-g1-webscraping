@@ -1,0 +1,67 @@
+<mxfile host="app.diagrams.net" modified="2026-09-17T00:00:00.000Z" agent="GitHub Copilot" version="23.1.5">
+  <diagram id="fluxoNetLab" name="Fluxo NetLab G1">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="title"/>
+        <mxCell id="background" parent="title"/>
+        <mxCell id="start" value="Busca G1 / Snapshots" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F3FF;strokeColor=#4A90E2;fontSize=14;fontStyle=1;" vertex="1" parent="background">
+          <mxGeometry x="40" y="200" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="scraper" value="scraper.py&#xa;Coleta + parsing + validação" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF7E6;strokeColor=#5CB85C;fontSize=14;fontStyle=1;" vertex="1" parent="background">
+          <mxGeometry x="260" y="200" width="210" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="normalize" value="Normalização&#xa;URL + campos + HTML" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF4D6;strokeColor=#E1A400;fontSize=13;fontStyle=1;" vertex="1" parent="background">
+          <mxGeometry x="520" y="200" width="210" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="dedupe" value="Deduplicação + quarentena" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDE9E9;strokeColor=#D9534F;fontSize=13;fontStyle=1;" vertex="1" parent="background">
+          <mxGeometry x="780" y="200" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="outputs" value="Arquivos de saída&#xa;JSON + CSV + logs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEE8FF;strokeColor=#7D5BA6;fontSize=13;fontStyle=1;" vertex="1" parent="background">
+          <mxGeometry x="1010" y="200" width="170" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="eval" value="evaluate.py&#xa;Métricas + comparação&#xa;com referência" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F7F7;strokeColor=#46A1A1;fontSize=13;fontStyle=1;" vertex="1" parent="background">
+          <mxGeometry x="720" y="380" width="220" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="tests" value="tests/test_scraper.py&#xa;Validação automatizada" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4F0E6;strokeColor=#B8892D;fontSize=13;fontStyle=1;" vertex="1" parent="background">
+          <mxGeometry x="430" y="380" width="200" height="90" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="arrow1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#6B7280;endArrow=block;" edge="1" parent="background" source="start" target="scraper">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#6B7280;endArrow=block;" edge="1" parent="background" source="scraper" target="normalize">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#6B7280;endArrow=block;" edge="1" parent="background" source="normalize" target="dedupe">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#6B7280;endArrow=block;" edge="1" parent="background" source="dedupe" target="outputs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arrow5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#6B7280;endArrow=block;" edge="1" parent="background" source="outputs" target="eval">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1095" y="330"/>
+              <mxPoint x="830" y="330"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#6B7280;endArrow=block;" edge="1" parent="background" source="scraper" target="tests">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="365" y="330"/>
+              <mxPoint x="530" y="330"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;strokeColor=#6B7280;endArrow=block;" edge="1" parent="background" source="tests" target="eval">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="label" value="Arquitetura do fluxo de coleta e validação do projeto NetLab G1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;" vertex="1" parent="background">
+          <mxGeometry x="280" y="80" width="720" height="40" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

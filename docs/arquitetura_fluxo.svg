@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="620" viewBox="0 0 1400 620">
+  <defs>
+    <style>
+      .title { font: 700 26px Arial, sans-serif; fill: #1b2a3a; }
+      .node { stroke-width: 2; rx: 18; }
+      .label { font: 700 15px Arial, sans-serif; fill: #1d2b35; }
+      .small { font: 500 13px Arial, sans-serif; fill: #33475b; }
+      .arrow { stroke: #6b7280; stroke-width: 2.5; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+  </defs>
+
+  <text x="700" y="60" text-anchor="middle" class="title">Arquitetura do fluxo de coleta e validação</text>
+
+  <rect x="40" y="120" width="180" height="90" class="node" fill="#E8F3FF" stroke="#4A90E2"/>
+  <text x="130" y="155" text-anchor="middle" class="label">Busca G1</text>
+  <text x="130" y="178" text-anchor="middle" class="small">HTML / snapshots</text>
+
+  <rect x="260" y="120" width="210" height="90" class="node" fill="#EAF7E6" stroke="#5CB85C"/>
+  <text x="365" y="155" text-anchor="middle" class="label">scraper.py</text>
+  <text x="365" y="178" text-anchor="middle" class="small">Coleta + parsing + validação</text>
+
+  <rect x="520" y="120" width="210" height="90" class="node" fill="#FFF4D6" stroke="#E1A400"/>
+  <text x="625" y="155" text-anchor="middle" class="label">Normalização</text>
+  <text x="625" y="178" text-anchor="middle" class="small">URL + campos + HTML</text>
+
+  <rect x="780" y="120" width="200" height="90" class="node" fill="#FDE9E9" stroke="#D9534F"/>
+  <text x="880" y="155" text-anchor="middle" class="label">Deduplicação</text>
+  <text x="880" y="178" text-anchor="middle" class="small">+ quarentena</text>
+
+  <rect x="1010" y="120" width="170" height="90" class="node" fill="#EEE8FF" stroke="#7D5BA6"/>
+  <text x="1095" y="155" text-anchor="middle" class="label">Saída</text>
+  <text x="1095" y="178" text-anchor="middle" class="small">JSON + CSV + logs</text>
+
+  <rect x="720" y="310" width="220" height="100" class="node" fill="#E8F7F7" stroke="#46A1A1"/>
+  <text x="830" y="350" text-anchor="middle" class="label">evaluate.py</text>
+  <text x="830" y="373" text-anchor="middle" class="small">Métricas + comparação</text>
+  <text x="830" y="394" text-anchor="middle" class="small">com referência</text>
+
+  <rect x="430" y="310" width="200" height="100" class="node" fill="#F4F0E6" stroke="#B8892D"/>
+  <text x="530" y="350" text-anchor="middle" class="label">tests</text>
+  <text x="530" y="373" text-anchor="middle" class="small">test_scraper.py</text>
+  <text x="530" y="394" text-anchor="middle" class="small">Validação automatizada</text>
+
+  <path d="M220 165 H260" class="arrow"/>
+  <path d="M470 165 H520" class="arrow"/>
+  <path d="M730 165 H780" class="arrow"/>
+  <path d="M980 165 H1010" class="arrow"/>
+  <path d="M1095 210 V260 H830 V310" class="arrow"/>
+  <path d="M365 210 V260 H530 V310" class="arrow"/>
+  <path d="M630 410 H720" class="arrow"/>
+</svg>

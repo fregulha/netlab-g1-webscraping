@@ -6,6 +6,12 @@ Este projeto foi desenvolvido para investigar e corrigir uma falha na rotina de 
 
 O objetivo foi identificar a causa raiz do problema, propor uma correção robusta em Python com Beautiful Soup, validar a solução com testes automatizados e documentar claramente os requisitos, a metodologia e os resultados alcançados.
 
+## Arquitetura do fluxo
+
+A imagem abaixo resume o fluxo principal do projeto, mostrando como a coleta, a limpeza, a deduplicação e a validação se conectam antes da geração dos artefatos finais.
+
+![Arquitetura do fluxo do projeto NetLab G1](docs/arquitetura_fluxo.svg)
+
 ## Status da solução
 
 Status geral: concluído, validado e documentado.
