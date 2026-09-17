@@ -1,0 +1,17 @@
+{
+  "url": "https://busca.globo.com/v1/search",
+  "method": "POST",
+  "body": [
+    {
+      "search_profile": "sp_g1_globo_com",
+      "query": "g1.info_query_recency",
+      "params": {
+        "q": "lgpd",
+        "from": 0,
+        "size": 10
+      }
+    }
+  ],
+  "status": 404,
+  "observado_em": "2026-09-17T18:34:06.063770+00:00"
+}

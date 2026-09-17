@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkbackstage_cms_search_page=self.webpackChunkbackstage_cms_search_page||[]).push([["src_Context_js"],{"./src/Context.js":(e,a,r)=>{function c(e){var a=e.context;return{hierarchy:{"backstage-structure":a.hierarchy["backstage-structure"],"colors-api":a.hierarchy["colors-api"],"brand-api":a.hierarchy["brand-api"],"favicon-api":a.hierarchy["favicon-api"]},environment:a.environment,render_functions:a.render_functions,api_content:a.api_content}}r.r(a),r.d(a,{default:()=>c})}}]);
+//# sourceMappingURL=src_Context_js.js.map
