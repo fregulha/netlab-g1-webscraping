@@ -49,6 +49,46 @@ def text(node):
     return ' '.join(node.get_text(' ', strip=True).split()) if node else None
 
 
+def _find_date_in_json(value):
+    if isinstance(value, dict):
+        for key in ('datePublished', 'dateModified', 'publishedTime', 'uploadDate'):
+            if key in value and value.get(key):
+                return str(value.get(key))
+        for child in value.values():
+            found = _find_date_in_json(child)
+            if found:
+                return found
+    elif isinstance(value, list):
+        for child in value:
+            found = _find_date_in_json(child)
+            if found:
+                return found
+    return None
+
+
+def extract_publication_date(html):
+    """Busca datePublished em JSON-LD, meta tags e microdados do artigo."""
+    if not html:
+        return None
+    soup = BeautifulSoup(html, 'html.parser')
+    for tag in soup.select('meta[property="article:published_time"], meta[name="pubdate"], meta[name="publishdate"], meta[itemprop="datePublished"]'):
+        content = tag.get('content') or tag.get('datetime')
+        if content:
+            return content
+    for script in soup.find_all('script', type=True):
+        script_type = (script.get('type') or '').lower()
+        if 'json' not in script_type:
+            continue
+        try:
+            payload = json.loads(script.string or '')
+        except (TypeError, ValueError):
+            continue
+        found = _find_date_in_json(payload)
+        if found:
+            return found
+    return None
+
+
 def parse_html(html, *, page, collected_at, source_url, snapshot):
     soup = BeautifulSoup(html, 'html.parser')
     cards = soup.select(CARD)
@@ -130,46 +170,74 @@ def save_output(out, records, events):
     return unique
 
 
+def build_search_url(term, page=1):
+    params = {'q': term}
+    if page > 1:
+        params['page'] = page
+    return BASE + '?' + urlencode(params)
+
+
+def enrich_publication_dates(records, s=None):
+    """Tenta preencher data_publicacao a partir do artigo real quando existente."""
+    if s is None:
+        s = session()
+    for row in records:
+        if row.get('data_publicacao') is not None or not row.get('url'):
+            continue
+        try:
+            article_html, _ = fetch_html(s, row['url'])
+            row['data_publicacao'] = extract_publication_date(article_html)
+        except (requests.RequestException, ValueError, OSError, TypeError):
+            continue
+    return records
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--html', nargs='+', type=Path, help='Snapshots ordenados, um por lote observado')
     p.add_argument('--term', default='lgpd')
+    p.add_argument('--pages', type=int, default=1, help='Quantas páginas da busca online processar antes de parar')
     p.add_argument('--out', type=Path, default=Path('data/run'))
     args = p.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',
                         handlers=[logging.StreamHandler(), logging.FileHandler(args.out / 'run.log', encoding='utf-8')])
-    url = BASE + '?' + urlencode({'q': args.term})
     events, records = [], []
-    inputs = args.html or [None]
-    for page, path in enumerate(inputs, 1):
-        try:
-            if path:
-                html = path.read_text(encoding='utf-8')
-                collected = utcnow()  # horário da extração; não inventa horário de captura
-                acquisition = 'arquivo_fornecido; horario_original_de_captura_desconhecido'
-            else:
-                with session() as s:
-                    html, url = fetch_html(s, url)
-                collected, acquisition = utcnow(), 'requests'
-            snapshot = f'pagina_{page:03d}.html'
-            (args.out / snapshot).write_text(html, encoding='utf-8')
-            rows, diagnostics = parse_html(html, page=page, collected_at=collected,
-                                          source_url=url, snapshot=snapshot)
-            records.extend(rows)
-            events.append({'pagina': page, 'aquisicao': acquisition, 'coletado_em': collected,
-                           'fonte_url': url, **diagnostics})
-            LOG.info('lote=%s cards=%s veja_mais=%s', page, len(rows), diagnostics['veja_mais'])
-        except (requests.RequestException, ValueError, OSError) as exc:
-            LOG.error('falha lote=%s tipo=%s mensagem=%s', page, type(exc).__name__, exc)
-            events.append({'pagina': page, 'erro': type(exc).__name__, 'mensagem': str(exc)})
+    inputs = args.html or [None] * max(args.pages, 1)
+    session_obj = session()
+    try:
+        for page, path in enumerate(inputs, 1):
+            try:
+                if path:
+                    html = path.read_text(encoding='utf-8')
+                    collected = utcnow()
+                    acquisition = 'arquivo_fornecido; horario_original_de_captura_desconhecido'
+                    source_url = BASE + '?' + urlencode({'q': args.term})
+                else:
+                    source_url = build_search_url(args.term, page)
+                    html, source_url = fetch_html(session_obj, source_url)
+                    collected, acquisition = utcnow(), 'requests'
+                snapshot = f'pagina_{page:03d}.html'
+                (args.out / snapshot).write_text(html, encoding='utf-8')
+                rows, diagnostics = parse_html(html, page=page, collected_at=collected,
+                                              source_url=source_url, snapshot=snapshot)
+                records.extend(rows)
+                events.append({'pagina': page, 'aquisicao': acquisition, 'coletado_em': collected,
+                               'fonte_url': source_url, **diagnostics})
+                LOG.info('lote=%s cards=%s veja_mais=%s', page, len(rows), diagnostics['veja_mais'])
+            except (requests.RequestException, ValueError, OSError) as exc:
+                LOG.error('falha lote=%s tipo=%s mensagem=%s', page, type(exc).__name__, exc)
+                events.append({'pagina': page, 'erro': type(exc).__name__, 'mensagem': str(exc)})
+    finally:
+        session_obj.close()
+    records = enrich_publication_dates(records, session()) if records else records
     output = save_output(args.out, records, events)
     if not output:
         LOG.error('Nenhum registro válido. Não interpretar como ausência de notícias.')
         return 2
     if any('erro' in e or not e.get('cards') for e in events):
-        return 3  # entrega parcial explicitada ao orquestrador
-    LOG.info('extração concluída; paginação online não validada')
+        return 3
+    LOG.info('extração concluída; paginação online processada em %s página(s)', len(inputs))
     return 0
 
 

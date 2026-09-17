@@ -27,7 +27,9 @@ A rotina inicial apresentava múltiplos problemas estruturais e operacionais:
 
 ## Diagnóstico técnico
 
-Foram analisados snapshots reais de HTML da página de busca e o comportamento da página passou a depender de componentes renderizados dinamicamente no cliente. Na resposta HTTP observada, o conteúdo principal da busca pode aparecer vazio no HTML bruto, enquanto o interface renderizado inclui os cards em um componente JavaScript. Isso torna o uso de seletores fixos e a coleta a partir do HTML bruto insuficientes, sem uma estratégia de snapshot ou coleta compatível com o conteúdo efetivamente renderizado.
+A evidência observada diretamente no navegador confirma que a página de busca do G1 não entrega a totalidade dos resultados em uma única carga HTML estática. Ao rolar a página, o portal dispara requisições de rede e vai montando novos itens dinamicamente na interface. Isso torna o HTML inicial insuficiente para coletar o conjunto completo de resultados, porque parte do conteúdo é carregado após a primeira renderização.
+
+Esse comportamento explica a regressão observada na rotina original: a coleta baseada em HTML bruto da primeira carga passa a retornar poucos resultados, registros vazios ou registros incompletos, sem que a rotina registre falha explícita. Em termos práticos, a solução precisa considerar não apenas seletores HTML, mas também carregamento incremental via fetch/scroll e a necessidade de sincronizar a coleta com esse ciclo dinâmico.
 
 Os principais seletores identificados na estrutura atual dos cards são:
 
@@ -57,6 +59,8 @@ A solução foi organizada em módulos com responsabilidades distintas:
 - Exportação em CSV e JSON.
 - Logging para acompanhamento da execução.
 - Tratamento de erros de rede, `HTTPError`, resposta sem HTML e campos ausentes.
+- Suporte a paginação online em múltiplas páginas com `--pages`.
+- Enriquecimento de `data_publicacao` a partir de metadados do artigo quando a busca não expõe a data com segurança.
 
 ## Requisitos e execução
 
@@ -84,8 +88,10 @@ python -m pip install -r requirements.txt
 ### Execução da coleta
 
 ```bash
-python scraper.py --term lgpd --out data/online
+python scraper.py --term lgpd --pages 3 --out data/online
 ```
+
+A opção `--pages` permite processar múltiplas páginas da busca, aproximando a rotina da estratégia esperada em paginação real. Quando a data de publicação não está disponível no card da busca, a rotina tenta extrair `datePublished` em metadados do artigo, sem inventar dados que não existam no HTML.
 
 ### Execução sobre snapshots locais
 
@@ -161,10 +167,11 @@ A LLM pode ser utilizada como apoio em etapas de diagnóstico e manutenção, se
 
 ## Limitações e próximos passos
 
-- A paginação online real precisa ser validada em ambiente genuíno de navegador.
-- O enriquecimento de data de publicação exige leitura de metadados do artigo e validação em fonte específica.
+- A paginação online real exige validação em ambiente genuíno de navegador, porque a página do G1 carrega novos resultados dinamicamente ao rolar e não apenas em uma única resposta HTML.
+- O enriquecimento de data de publicação exige leitura de metadados do artigo e validação em fonte específica, porque o card de busca pode expor apenas data exibida e não necessariamente a data de publicação oficial.
 - A página G1 pode continuar evoluindo; a rotina deve ser revisada periodicamente.
-- A coleta ao vivo ainda deve ser monitorada com logs, fingerprints de HTML e validação de continuidade.
+- A coleta ao vivo ainda deve ser monitorada com logs, fingerprints de HTML, inspeção de rede e validação de continuidade.
+- Em caso de necessidade de cobertura completa, a abordagem mais robusta é seguir o comportamento real de carregamento com automação de navegador ou pelo consumo da API de busca que alimenta o resultado em tempo real.
 
 ## Documentação de evidências
 

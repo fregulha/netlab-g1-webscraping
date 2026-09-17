@@ -134,3 +134,9 @@ def test_real_cumulative_snapshots():
     good, quarantine, duplicates = deduplicate(sum(batches, []))
     assert len(good) == 30 and duplicates == 30 and not quarantine
     assert [sum(row['pagina'] == p for row in good) for p in [1, 2, 3]] == [10, 10, 10]
+
+
+def test_extract_publication_date_from_article_metadata():
+    from scraper import extract_publication_date
+    html = '''<html><head><script type="application/ld+json">{"@context":"https://schema.org","@type":"NewsArticle","datePublished":"2026-08-26T14:15:00-03:00"}</script></head></html>'''
+    assert extract_publication_date(html) == '2026-08-26T14:15:00-03:00'
