@@ -1,12 +1,29 @@
 """Avaliação contra referência independente, nunca gerada pelo parser."""
 import argparse
 import json
+import hashlib
 from datetime import datetime
 from pathlib import Path
 
 
 def ratio(n, d):
     return n / d if d else None
+
+
+def verify_snapshots(rows, directory):
+    """Confere o hash do texto UTF-8 analisado, sem sair do diretório da coleta."""
+    directory = Path(directory).resolve()
+    valid = 0
+    for row in rows:
+        try:
+            path = (directory / row['snapshot']).resolve()
+            if not path.is_relative_to(directory):
+                continue
+            digest = hashlib.sha256(path.read_text(encoding='utf-8').encode('utf-8')).hexdigest()
+            valid += digest == row['sha256']
+        except (OSError, KeyError, ValueError, TypeError):
+            continue
+    return {'verificados': len(rows), 'validos': valid, 'taxa': ratio(valid, len(rows))}
 
 
 def evaluate(rows, reference):
@@ -54,4 +71,8 @@ if __name__ == '__main__':
     ref = json.loads(a.reference.read_text(encoding='utf-8'))
     if not ref:
         p.error('Amostra de referência vazia; não produzir métricas fictícias.')
-    a.out.write_text(json.dumps(evaluate(rows, ref), ensure_ascii=False, indent=2), encoding='utf-8')
+    metrics = evaluate(rows, ref)
+    metrics['integridade_snapshot'] = verify_snapshots(rows, a.data.parent)
+    metrics['referencia_metodo'] = 'Referência local revisada pelo assistente; revisão humana independente pendente.'
+    a.out.parent.mkdir(parents=True, exist_ok=True)
+    a.out.write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding='utf-8')

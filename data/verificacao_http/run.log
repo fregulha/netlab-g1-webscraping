@@ -1,0 +1,3 @@
+2026-09-17 14:16:29,215 WARNING zero_cards: possível HTML sem renderização ou mudança estrutural
+2026-09-17 14:16:29,217 INFO lote=1 cards=0 veja_mais=False
+2026-09-17 14:16:29,222 ERROR Nenhum registro válido. Não interpretar como ausência de notícias.

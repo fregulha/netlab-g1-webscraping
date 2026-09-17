@@ -1,0 +1,24 @@
+{
+  "verificado_em": "2026-09-17T18:18:24.004068+00:00",
+  "python": "3.14.4",
+  "arquivos": [
+    {
+      "arquivo": "initial.html",
+      "sha256_bytes": "d329b4e8f9e420925988007a9ea489eea78b745232b1728aa2e6eb59c919ed9a",
+      "confere_manifesto": true
+    },
+    {
+      "arquivo": "component.js",
+      "sha256_bytes": "e56311e2e1f108ffc235ecb29dcda3df106aa06fa631c54decf1ea05dceffc95",
+      "confere_manifesto": true
+    },
+    {
+      "arquivo": "Busca.html",
+      "sha256_bytes": "852efdc38000c52573042554f43e49de9a84d1097a50e0822fbbffb599dff589",
+      "confere_manifesto": true
+    }
+  ],
+  "cards_html_renderizado": 10,
+  "cards_seletor_original": 0,
+  "browser_disponivel": false
+}

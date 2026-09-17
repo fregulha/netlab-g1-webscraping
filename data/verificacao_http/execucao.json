@@ -1,0 +1,17 @@
+{
+  "eventos": [
+    {
+      "pagina": 1,
+      "aquisicao": "requests",
+      "coletado_em": "2026-09-17T18:16:29.205340+00:00",
+      "fonte_url": "https://g1.globo.com/busca/?q=lgpd",
+      "cards": 0,
+      "outros_cards": 0,
+      "container_vazio": true,
+      "veja_mais": false
+    }
+  ],
+  "duplicados": 0,
+  "registros": 0,
+  "quarentena": 0
+}

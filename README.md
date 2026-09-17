@@ -2,7 +2,7 @@
 
 **STATUS: validação do snapshot concluída; coleta online e paginação pendentes.**
 
-21 testes aprovados. O HTML renderizado enviado pela candidata contém 10 resultados
+23 testes aprovados. O HTML renderizado enviado pela candidata contém 10 resultados
 (9 notícias e 1 vídeo). A base real extraída está em `data/coleta/resultados.json`
 e `.csv`; a referência revisada pelo assistente está em `data/referencia_revisada.json`
 e as métricas em `data/metricas.json`. Não confundir com o diagnóstico antigo vazio.
@@ -76,7 +76,7 @@ Retries limitados para GET em 429/5xx; erros de conexão/status/tipo são regist
 sem perder resultados anteriores. Saídas: 0 = registros em todos os lotes fornecidos;
 2 = nenhum registro válido; 3 = execução parcial. Código 0 não prova cobertura online.
 
-## Instalação e execução (Python 3.12)
+## Instalação e execução (verificado em Python 3.14.4)
 
 ```bash
 python -m venv .venv
@@ -141,10 +141,11 @@ repetições para ampliar a avaliação; o primeiro lote não é amostra aleató
 
 `evaluate.py` calcula métricas do escopo representado na referência. Denominador
 zero retorna `null`, nunca 100%. Atualidade fica `null` até haver observação temporal
-independente. Rastreabilidade calculada é presença de metadados; não valida o arquivo
-fisicamente. Precisão só é interpretável se a referência enumera todo o escopo.
+independente. Rastreabilidade declarada mede presença de metadados; a CLI também
+confere hashes dos arquivos em `integridade_snapshot`. Precisão só é interpretável
+se a referência enumera todo o escopo.
 
-**Resultados obtidos:** 21 testes aprovados (incluindo regressão do snapshot real). HTML inicial: 0 cards; HTML renderizado fornecido: 10 registros válidos. Métricas reais do snapshot estão no início deste README. Não extrapolar para outros lotes.
+**Resultados obtidos:** 23 testes aprovados (incluindo regressão do snapshot real). HTML inicial: 0 cards; HTML renderizado fornecido: 10 registros válidos. Métricas reais do snapshot estão no início deste README. Não extrapolar para outros lotes.
 
 ## Proposta LLM
 
@@ -158,13 +159,15 @@ registros de notícia nem preenche campos ausentes. Alterações exigem validaç
 - Publicação não enriquecida; resumo pode estar truncado na busca.
 - Adicionar captura de consentimento/estado de carregamento como diagnóstico se necessário.
 - Revisar humanamente a referência incluída; adicionar novos lotes e repetir métricas.
-- Validar falha de um lote seguida de sucesso em teste de integração do orquestrador.
-- Integridade verificada nesta execução; automatizar auditoria de datas futuras e defasagem temporal.
+- Teste de integração adicionado: falha de arquivo seguida de sucesso preserva a saída e retorna código 3.
+- Integridade automatizada na CLI; ampliar auditoria de datas futuras e defasagem temporal.
 - Antes da entrega: revisar nome completo, publicar em repositório Git e inserir seu link no PDF.
 
 ## Git
 
-O ZIP contém um repositório local com commit inicial; não foi publicado em conta externa.
+O ZIP da entrega contém os arquivos e `netlab-g1.bundle`, com histórico Git local;
+não foi publicado em conta externa. Para restaurar o repositório:
+`git clone netlab-g1.bundle netlab-g1-restaurado`.
 Também é possível criar um repositório vazio no GitHub e enviar os arquivos, preservando
 `evidence`, `tests`, `data` e `docs`. Nunca incluir senhas, cookies ou tokens.
 
@@ -178,3 +181,11 @@ Também é possível criar um repositório vazio no GitHub e enviar os arquivos,
 
 Os links de documentação são referências para consulta; o diagnóstico está ancorado
 nos arquivos locais obtidos do portal e na imagem fornecida, não em suposições de LLM.
+
+## Verificação para o relatório PDF (17/09/2026)
+
+Nova consulta em `data/verificacao_http/`: zero cards no HTML HTTP.
+Navegador indisponível nesta sessão, sem validação de interação.
+23 testes executados e aprovados em Python 3.14.4.
+Ver `evidence/tests_verificacao.txt` e `evidence/verificacao.json`.
+O relatório mantém explícitas as pendências de paginação, revisão humana da referência e publicação remota.

@@ -41,7 +41,8 @@ open_reviewable_patch(proposal, metrics)  # aprovação humana antes do deploy
 ```
 
 As funções acima são conceituais. Limiares só devem ser fixados após a linha de base;
-não há linha de base real nesta versão. Não executar código gerado pela LLM diretamente.
+a linha de base disponível cobre somente um snapshot e depende de revisão humana.
+Não executar código gerado pela LLM diretamente.
 Ela não produz título, resumo, URL ou data, não completa lacunas e não transforma
 `modified` em `published`. Campos continuam sendo extraídos deterministicamente do
 HTML. Falta de evidência resulta em `null`/quarentena e alerta, nunca em texto inventado.

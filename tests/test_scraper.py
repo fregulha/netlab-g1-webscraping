@@ -98,3 +98,25 @@ def test_real_snapshot_coverage():
     assert len({r['url'] for r in rows}) == 10
     assert all(r['url'].startswith('https://g1.globo.com/') for r in rows)
     assert rows[0]['titulo'] == 'Integração TEC: mais de 37% dos órgãos e empresas não seguem regras da LGPD'
+
+
+def test_snapshot_integrity_detects_tampering(tmp_path):
+    from evaluate import verify_snapshots
+    (tmp_path / 'teste.html').write_text(HTML, encoding='utf-8')
+    assert verify_snapshots(parse(), tmp_path)['taxa'] == 1
+    (tmp_path / 'teste.html').write_text(HTML + 'alterado', encoding='utf-8')
+    assert verify_snapshots(parse(), tmp_path)['taxa'] == 0
+
+
+def test_orchestrator_preserves_success_after_failure(tmp_path, monkeypatch):
+    import json
+    import sys
+    from scraper import main
+    valid = tmp_path / 'valid.html'
+    valid.write_text(HTML, encoding='utf-8')
+    out = tmp_path / 'out'
+    monkeypatch.setattr(sys, 'argv', ['scraper.py', '--html', str(tmp_path / 'missing.html'),
+                                    str(valid), '--out', str(out)])
+    assert main() == 3
+    rows = json.loads((out / 'resultados.json').read_text(encoding='utf-8'))
+    assert len(rows) == 1 and rows[0]['pagina'] == 2
