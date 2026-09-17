@@ -94,23 +94,17 @@ def build_pdf():
     ]))
     story.append(p('A lógica de paginação foi tratada como parte do problema: a página do G1 não se comporta como uma página estática simples, mas como um ambiente de carregamento incremental. Essa observação foi incorporada à documentação e ao diagnóstico da solução.', 'BodyTextCustom'))
 
-    story.append(p('<b>6. Requisitos solicitados e atendimento</b>', 'SectionTitle'))
+    story.append(p('<b>6. O que foi feito</b>', 'SectionTitle'))
+    story.append(p('O projeto foi conduzido em três frentes principais: diagnóstico técnico, correção da rotina e validação dos dados. Primeiro, analisamos a causa raiz da regressão e identificamos que a página de busca do G1 deixou de ser tratada como HTML estático completo. Em seguida, reorganizamos a lógica de extração para lidar com respostas parciais, URLs inválidas, campos ausentes e registros repetidos. Por fim, validamos a qualidade dos dados com amostra de referência, métricas explícitas e testes automatizados.', 'BodyTextCustom'))
     story.extend(bullet_list([
-        'Identificar e explicar os principais problemas do código atual: atendido por meio do diagnóstico técnico documentado.',
-        'Corrigir a rotina de coleta com Python e Beautiful Soup: atendido com parser robusto e normalização de dados.',
-        'Atualizar seletores HTML e mecanismo de paginação: atendido com revisão de estrutura e evidência de carregamento incremental.',
-        'Coletar título, URL, resumo, data, página e horário da coleta: atendido com registros estruturados e metadados de execução.',
-        'Tratar falhas de conexão, HTTP inválido e campos ausentes: atendido com validação e tratamento de erros sem interrupção do processo.',
-        'Evitar registros duplicados: atendido com deduplicação por URL e registro em quarentena.',
-        'Organizar o código de forma legível e reutilizável: atendido pela separação em módulos com responsabilidades claras.',
-        'Sugerir melhorias na padronização do código e dos dados: atendido com documentação e boas práticas.',
-        'Incluir logs e mensagens informativas: atendido com rastreabilidade de execução e diagnóstico.',
-        'Salvar os resultados em CSV, JSON ou outro formato estruturado: atendido com exportação em arquivos estruturados.',
-        'Incluir testes automatizados: atendido com suíte validada em pytest.',
-        'Documentar requisitos, instalação e execução: atendido no README do projeto.',
-        'Propor uso de LLM para manutenção e diagnóstico: atendido com estratégia documentada e mecanismos de validação.',
-        'Construir amostra de referência e métricas: atendido com avaliação comparativa de qualidade dos dados.',
-        'Descrever limitações e melhorias futuras: atendido com seção dedicada e próximos passos.'
+        'análise da falloff do processo de coleta e revisão dos seletores',
+        'refatoração do scraper para parsing defensivo e modular',
+        'normalização de URLs, deduplicação e separação de registros em quarentena',
+        'tratamento de erros de rede, HTTP e dados incompletos sem interromper a execução',
+        'exportação em CSV e JSON com metadados de origem, página e coleta',
+        'documentação de instalação, execução e diagnóstico do projeto',
+        'proposta de uso de LLM como apoio humano à análise de HTML e testes de regressão',
+        'avaliação quantitativa da qualidade da coleta com indicadores de cobertura, unicidade e consistência'
     ]))
 
     story.append(p('<b>7. Métricas e evidências de qualidade</b>', 'SectionTitle'))
@@ -124,8 +118,8 @@ def build_pdf():
     ]))
 
     story.append(p('<b>8. Uso de LLM</b>', 'SectionTitle'))
-    story.append(p('A LLM pode auxiliar na análise de HTML, comparação de versões da página, revisão de logs e geração de testes de regressão. Sua função principal seria apoiar o diagnóstico e a manutenção do scraper, sem substituir as validações objetivas do projeto.', 'BodyTextCustom'))
-    story.append(p('Antes de incorporar qualquer sugestão, a resposta do modelo precisa ser validada por evidência observável e testes automatizados. Isso reduz o risco de alucinações e garante que apenas informações realmente presentes nos dados sejam incorporadas ao scraper.', 'BodyTextCustom'))
+    story.append(p('A LLM foi proposta como apoio ao diagnóstico e à manutenção da rotina, especialmente em momentos em que a página muda de estrutura ou quando se deseja comparar snapshots e logs de execução. A ideia não é automatizar a coleta nem confiar cega na resposta do modelo, mas sim usar a IA para analisar trechos de HTML, sugerir seletores e identificar inconsistências antes de qualquer alteração no código.', 'BodyTextCustom'))
+    story.append(p('As respostas do modelo precisam ser validadas com evidências coletadas, testes automatizados e comparação com referência manual. Esse controle é importante para garantir que a rotina continue extraindo apenas dados realmente presentes na página e que não haja alucinação de campos ou metainformações inexistentes.', 'BodyTextCustom'))
 
     story.append(p('<b>9. Limitações e próximos passos</b>', 'SectionTitle'))
     story.extend(bullet_list([
