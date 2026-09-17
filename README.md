@@ -1,10 +1,26 @@
-# Busca G1 / LGPD — diagnóstico e protótipo auditável
+# Busca G1 / LGPD — diagnóstico e extração auditável
 
-**STATUS: PRELIMINAR. Não está pronto para submissão.**
+**STATUS: validação do snapshot concluída; coleta online e paginação pendentes.**
 
-Há 17 testes automatizados aprovados. Não há ainda base de notícias efetivamente
-coletada, amostra manual, métricas empíricas ou validação de paginação. Os arquivos
-vazios em `data/diagnostico` documentam a falha diagnosticada, não uma coleta bem-sucedida.
+21 testes aprovados. O HTML renderizado enviado pela candidata contém 10 resultados
+(9 notícias e 1 vídeo). A base real extraída está em `data/coleta/resultados.json`
+e `.csv`; a referência revisada pelo assistente está em `data/referencia_revisada.json`
+e as métricas em `data/metricas.json`. Não confundir com o diagnóstico antigo vazio.
+A referência foi transcrita após inspeção do HTML, fora do parser; não é uma anotação
+humana independente. Fernanda deve revisar os 10 registros antes da submissão.
+
+## Resultados no snapshot fornecido
+
+Cobertura, precisão de pertencimento e unicidade: 10/10 (100%). Completude de título,
+URL, resumo e data exibida: 10/10. Concordância de título, resumo e data exibida com
+referência: 10/10. Publicação: 0/10, pois não foi identificada como tal no card.
+Atualidade: não mensurada, pois não há horário independente de captura. Integridade
+dos snapshots: hashes dos 10 registros conferidos contra os arquivos (ver métricas).
+Esses resultados descrevem somente este snapshot, não a cobertura geral da busca.
+
+Links `measures.globo.com/v1/click` são decodificados pelo parâmetro `u` sem realizar
+requisição ao redirecionador. Só destinos HTTP(S) em g1.globo.com são aceitos nessa
+regra. Isso evita usar identificadores transitórios de tracking como identidade.
 
 ## Diagnóstico com evidências
 
@@ -16,19 +32,18 @@ Isso demonstra que requests + mudança de seletores, isoladamente, não bastam p
 esta resposta observada. Sem snapshot histórico, não se pode datar a mudança nem
 atribuir a ela todos os sintomas relatados pela equipe.
 
-O código-fonte do componente indica os seguintes seletores, ainda pendentes de
-validação no DOM renderizado:
+O código-fonte do componente indica os seguintes seletores, confirmados no HTML renderizado fornecido:
 
 | Campo | Seletor / regra |
 |---|---|
-| Card de notícia | `li.widget--info` |
+| Card de notícia / vídeo | `li.widget--info`, `li.video-widget--info` |
 | Título | `.widget--info__title` |
 | URL | ancestral `a[href]` do título |
 | Resumo | `.widget--info__description` |
 | Data exibida | `.widget--info__meta` |
 | Mais resultados | `button.pagination__load-more` |
 
-O JS usa `_source.modified` na data exibida. Por isso `data_publicacao` permanece
+Para vídeo, substituir o prefixo `widget--info` por `video-widget--info`; a semântica da data do vídeo não foi confirmada. O JS de notícia usa `_source.modified` na data exibida. Por isso `data_publicacao` permanece
 nula; `data_exibida` e sua semântica são preservadas. Uma extensão deve visitar a
 notícia e validar `datePublished` em JSON-LD/metadados, registrando a fonte específica
 para esse enriquecimento. Não inferir publicação da URL nem de uma data relativa.
@@ -88,7 +103,7 @@ Extração de HTML renderizado fornecido pelo usuário, após sua obtenção:
 
 ```bash
 python scraper.py --html captura_01.html captura_02.html --out data/coleta
-python evaluate.py --data data/coleta/resultados.json --reference data/referencia_manual.json --out data/metricas.json
+python evaluate.py --data data/coleta/resultados.json --reference data/referencia_revisada.json --out data/metricas.json
 ```
 
 ## Paginação: diagnóstico e implementação pendente
@@ -108,7 +123,7 @@ volume, respeitar termos e robots aplicáveis, não contornar barreiras de acess
 
 Escolher manualmente TODOS os cards de notícia do primeiro lote renderizado, antes
 de abrir a saída do parser. Transcrever título, URL, resumo e data exatamente como
-exibidos, usando `null` para ausências. Salvar como `data/referencia_manual.json`,
+exibidos, usando `null` para ausências. Salvar como `data/referencia_revisada.json`,
 com `pagina: 1`, e manter screenshot, HTML e horário. Uma segunda pessoa deve revisar.
 A referência não deve ser derivada do parser. Incluir depois lotes com ausências e
 repetições para ampliar a avaliação; o primeiro lote não é amostra aleatória do portal.
@@ -129,9 +144,7 @@ zero retorna `null`, nunca 100%. Atualidade fica `null` até haver observação 
 independente. Rastreabilidade calculada é presença de metadados; não valida o arquivo
 fisicamente. Precisão só é interpretável se a referência enumera todo o escopo.
 
-**Resultados obtidos:** 17 testes sintéticos aprovados; 0 cards de notícia extraídos
-do HTML inicial. Métricas reais: não avaliadas. Não há evidência para alegar
-precisão/cobertura de 100%, nem para dizer que o G1 não tem resultados para LGPD.
+**Resultados obtidos:** 21 testes aprovados (incluindo regressão do snapshot real). HTML inicial: 0 cards; HTML renderizado fornecido: 10 registros válidos. Métricas reais do snapshot estão no início deste README. Não extrapolar para outros lotes.
 
 ## Proposta LLM
 
@@ -140,13 +153,13 @@ registros de notícia nem preenche campos ausentes. Alterações exigem validaç
 
 ## Limitações e próximos passos obrigatórios
 
-- Adquirir e validar DOM renderizado e paginação atual; a aquisição automática ainda não foi restabelecida.
-- Parser cobre cards `widget--info`; vídeo, live e navegação precisam de parsers próprios e avaliação.
+- DOM renderizado validado no snapshot enviado. Validar paginação atual; a aquisição automática ainda não foi restabelecida.
+- Parser cobre notícia e vídeo observados; live e navegação precisam de parsers próprios e avaliação.
 - Publicação não enriquecida; resumo pode estar truncado na busca.
 - Adicionar captura de consentimento/estado de carregamento como diagnóstico se necessário.
-- Construir referência independente, rodar métricas e incluir a base efetivamente obtida.
+- Revisar humanamente a referência incluída; adicionar novos lotes e repetir métricas.
 - Validar falha de um lote seguida de sucesso em teste de integração do orquestrador.
-- Verificar hash contra arquivo em avaliação, datas futuras e defasagem temporal.
+- Integridade verificada nesta execução; automatizar auditoria de datas futuras e defasagem temporal.
 - Antes da entrega: revisar nome completo, publicar em repositório Git e inserir seu link no PDF.
 
 ## Git

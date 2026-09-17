@@ -15,7 +15,7 @@ from urllib3.util.retry import Retry
 
 LOG = logging.getLogger(__name__)
 BASE = 'https://g1.globo.com/busca/'
-CARD = 'li.widget--info'
+CARD = 'li.widget--info, li.video-widget--info'
 FIELDS = ['titulo', 'url', 'resumo', 'data_publicacao', 'data_exibida',
           'semantica_data_exibida', 'pagina', 'coletado_em', 'fonte_url',
           'snapshot', 'sha256', 'posicao', 'avisos']
@@ -32,13 +32,21 @@ def normalize_url(value, base=BASE):
     p = urlsplit(urljoin(base, value.strip()))
     if p.scheme not in {'http', 'https'} or not p.hostname or p.username or p.password:
         return None
+    if p.hostname == 'measures.globo.com' and p.path == '/v1/click':
+        targets = [v for k, v in parse_qsl(p.query) if k == 'u']
+        if len(targets) != 1:
+            return None
+        target = urlsplit(targets[0])
+        if target.hostname != 'g1.globo.com' or target.scheme not in {'http', 'https'}:
+            return None
+        return normalize_url(targets[0], base)
     query = [(k, v) for k, v in parse_qsl(p.query, keep_blank_values=True)
              if not k.lower().startswith('utm_') and k.lower() not in {'fbclid', 'gclid'}]
     return urlunsplit((p.scheme.lower(), p.netloc.lower(), p.path, urlencode(query), ''))
 
 
 def text(node):
-    return ' '.join(node.stripped_strings) if node else None
+    return ' '.join(node.get_text(' ', strip=True).split()) if node else None
 
 
 def parse_html(html, *, page, collected_at, source_url, snapshot):
@@ -47,10 +55,11 @@ def parse_html(html, *, page, collected_at, source_url, snapshot):
     digest = hashlib.sha256(html.encode('utf-8')).hexdigest()
     records = []
     for pos, card in enumerate(cards, 1):
-        title = card.select_one('.widget--info__title')
+        prefix = 'video-widget--info' if 'video-widget--info' in card.get('class', []) else 'widget--info'
+        title = card.select_one(f'.{prefix}__title')
         link = title.find_parent('a') if title else None
         if link is None:
-            link = card.select_one('.widget--info__text-container a[href]')
+            link = card.select_one(f'.{prefix}__text-container a[href]')
         url = normalize_url(link.get('href') if link else None, source_url)
         warnings = []
         if not url:
@@ -60,9 +69,9 @@ def parse_html(html, *, page, collected_at, source_url, snapshot):
         # O componente do portal usa _source.modified, não published.
         # Não converter a data relativa de atualização em data de publicação.
         records.append(dict(zip(FIELDS, [
-            text(title), url, text(card.select_one('.widget--info__description')),
-            None, text(card.select_one('.widget--info__meta')),
-            'atualizacao_conforme_componente_js', page, collected_at, source_url,
+            text(title), url, text(card.select_one(f'.{prefix}__description')),
+            None, text(card.select_one(f'.{prefix}__meta')),
+            ('data_exibida_semantica_nao_confirmada' if prefix.startswith('video') else 'atualizacao_conforme_componente_js'), page, collected_at, source_url,
             snapshot, digest, pos, warnings,
         ])))
     if not cards:

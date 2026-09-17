@@ -11,6 +11,12 @@
       "arquivo": "component.js",
       "url": "https://s.glbimg.com/bs/delivery/delivery-components/backstage-cms-all-search-results/0.2.9/src_component_tsx-webpack_sharing_consume_default_react_react-webpack_sharing_consume_default-bbb632.js",
       "sha256_bytes": "e56311e2e1f108ffc235ecb29dcda3df106aa06fa631c54decf1ea05dceffc95"
+    },
+    {
+      "arquivo": "Busca.html",
+      "origem": "arquivo fornecido pela candidata",
+      "captura_em": null,
+      "sha256_bytes": "852efdc38000c52573042554f43e49de9a84d1097a50e0822fbbffb599dff589"
     }
   ]
 }

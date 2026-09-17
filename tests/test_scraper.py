@@ -13,7 +13,7 @@ def parse(html=HTML, page=1):
 def test_fields_and_date_semantics():
     row = parse()[0]
     assert row['titulo'] == 'Lei LGPD'
-    assert row['resumo'] == 'A   lei'  # espaços internos preservados
+    assert row['resumo'] == 'A lei'  # espaços normalizados
     assert row['data_publicacao'] is None
     assert row['data_exibida'] == 'há 2 dias'
     assert len(row['sha256']) == 64
@@ -75,3 +75,26 @@ def test_quality_detects_missing_and_wrong():
 def test_empty_metrics_not_perfect():
     m = evaluate([], [])
     assert m['cobertura'] is None and m['unicidade'] is None
+
+
+def test_tracking_link_decoded_and_deduplicated():
+    url = 'https://measures.globo.com/v1/click?rid=abc&u=https%3A%2F%2Fg1.globo.com%2Fa'
+    assert normalize_url(url) == 'https://g1.globo.com/a'
+    assert normalize_url(url.replace('rid=abc', 'rid=xyz')) == normalize_url(url)
+
+def test_untrusted_tracking_target_rejected():
+    assert normalize_url('https://measures.globo.com/v1/click?u=https://evil.example/a') is None
+
+def test_video():
+    row = parse(HTML.replace('widget--info', 'video-widget--info'))[0]
+    assert row['titulo'] == 'Lei LGPD'
+    assert row['semantica_data_exibida'] == 'data_exibida_semantica_nao_confirmada'
+
+def test_real_snapshot_coverage():
+    from pathlib import Path
+    html = (Path(__file__).resolve().parents[1] / 'evidence/Busca.html').read_text(encoding='utf-8')
+    rows = parse(html)
+    assert len(rows) == 10
+    assert len({r['url'] for r in rows}) == 10
+    assert all(r['url'].startswith('https://g1.globo.com/') for r in rows)
+    assert rows[0]['titulo'] == 'Integração TEC: mais de 37% dos órgãos e empresas não seguem regras da LGPD'
